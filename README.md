@@ -63,6 +63,18 @@ If `CURATION_USER` is set, the gateway loads that user's mute list via the same
 event loader used elsewhere, keeps it in `eventStore`, and refreshes it on the
 interval given by `CURATION_REFRESH` in seconds (independent of `NOSTR_RELAYS`).
 
+The gateway **never publishes** that list — you sign kind `10000` yourself (see
+`scripts/publish-curation-mutelist.cjs`). Relays are the public relays in
+`NOSTR_RELAYS` / the curator's NIP-65 outboxes, not a special nsite-only kind.
+`CACHE_RELAYS` only **writes fetched events** to a local cache relay; it does not
+replace publishing to the wider network.
+
+### gittr-pages branch extras
+
+- `GET /status/manifests.json` — machine-readable directory (curation + `hasIndexHtml`)
+- `GITTR_SYNC_MUTED_PUBKEYS` — optional hex backup until the relay mute list is live
+- `hasIndexHtml` on indexed manifests (browseable homepages only in the JSON feed)
+
 ## Cache Backends
 
 ### Deno KV (metadata cache)

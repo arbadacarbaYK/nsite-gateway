@@ -1,6 +1,11 @@
 node_modules
 build
 .env
+.env.*
+!.env.example
 data
 .netrc
+# Server-only curator signing key (never commit)
+.gittr-pages-mute-nsec
+*mute-nsec*
 
