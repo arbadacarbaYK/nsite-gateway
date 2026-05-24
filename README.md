@@ -24,17 +24,22 @@ For core gateway behavior (caching, hostname rules, Blossom proxy, Docker layout
 
 ## What we added (gittr Pages)
 
-| Feature | Purpose | Back to hzrd149? |
-|--------|---------|------------------|
-| `GET /status/manifests.json` | JSON site directory for [gittr.space/pages](https://gittr.space/pages) | **No** — fork only (a PR branch exists locally; never opened on his repo) |
-| `hasIndexHtml` | JSON feed lists only manifests that include `/index.html` | **No** — gittr-only (part of `manifests.json`) |
-| `GITTR_SYNC_MUTED_PUBKEYS` | Server env backup for the publisher blocklist until the relay mute list is live | **No** — gittr-only |
-| `scripts/publish-curation-mutelist.cjs` | Operator script to publish/update the curator NIP-51 mute list | **No** — gittr-only |
+### gittr-only (not pushed back to hzrd149)
 
-**Already merged into [hzrd149/nsite-gateway](https://github.com/hzrd149/nsite-gateway)** (not gittr-only): status “updated” time for manifest-only republishes + keep newest manifest per site — [PR #21](https://github.com/hzrd149/nsite-gateway/pull/21) (merged May 2026). Our fork includes that via the v3.6.2 line / merge history.
+| Feature | Back to hzrd149? |
+|--------|------------------|
+| **Machine-readable site directory** — JSON list of published sites for [gittr.space/pages](https://gittr.space/pages) and automation (`GET /status/manifests.json`) | **No** — fork only (PR branch prepared locally; never opened on his repo) |
+| **Homepage-only filter** — that JSON lists only sites with `/index.html`, not empty manifests (`hasIndexHtml`) | **No** — part of the row above |
+| **Publisher blocklist backup** — server env holds blocklisted pubkeys until the curator mute list is on relays (`GITTR_SYNC_MUTED_PUBKEYS`) | **No** |
+| **Curator mute-list publishing** — operator script to sign and publish/update the NIP-51 kind `10000` list (`scripts/publish-curation-mutelist.cjs`) | **No** |
 
-- **`GET /status`** — HTML table of all indexed manifests (operator view).
-- **`GET /status/manifests.json`** + gittr **`/pages`** — public “sites with a homepage” directory.
+### Pushed back to hzrd149 (merged)
+
+| Feature | Back to hzrd149? |
+|--------|------------------|
+| **Correct “updated” on `/status`** when a site is republished via manifest only (no new snapshot), and **keep the newest manifest** per site address | **Yes** — [PR #21](https://github.com/hzrd149/nsite-gateway/pull/21) merged May 2026 |
+
+Implementation detail: HTML **`/status`** = all indexed manifests (operator). **`/status/manifests.json`** + gittr **`/pages`** = public “sites with a homepage” directory.
 
 Curation: [gittr `docs/GITTR_PAGES_CURATION.md`](https://github.com/arbadacarbaYK/gittr/blob/main/docs/GITTR_PAGES_CURATION.md). Scripts: [`scripts/README.md`](scripts/README.md).
 
