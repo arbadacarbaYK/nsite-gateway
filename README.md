@@ -1,8 +1,8 @@
 # nsite-gateway — gittr Pages
 
 **Production:** [https://pages.gittr.space](https://pages.gittr.space)  
-**This repository:** [arbadacarbaYK/nsite-gateway](https://github.com/arbadacarbaYK/nsite-gateway) — the gateway we build and run for gittr Pages.  
-**App repo:** [arbadacarbaYK/gittr](https://github.com/arbadacarbaYK/gittr) — deploy script, nginx example, production `.env` template.
+**This repository:** [arbadacarbaYK/nsite-gateway](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/nsite-gateway) — the gateway we build and run for gittr Pages.  
+**App repo:** [arbadacarbaYK/gittr](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr) — deploy script, nginx example, production `.env` template.
 
 Branch **`master`** is our production line (based on hzrd149 **v3.6.2**, plus gittr-only features below).
 
@@ -34,7 +34,7 @@ We **use** that feature in production (`CURATION_USER` = gittr operator) and **e
 | Publish / merge blocklist → kind `10000` on relays | **No** | `scripts/publish-curation-mutelist.cjs` merges `NEXT_PUBLIC_PUBLISHER_BLOCKLIST` with the existing list (does not replace `p` tags) |
 | Until relays have the new list | **No** | `GITTR_SYNC_MUTED_PUBKEYS` on deploy (from `ui/.env.local` blocklist) + `src/helpers/gittr-muted-pubkeys.ts` |
 
-Details: [gittr `docs/GITTR_PAGES_CURATION.md`](https://github.com/arbadacarbaYK/gittr/blob/main/docs/GITTR_PAGES_CURATION.md). Operator script: [`scripts/README.md`](scripts/README.md).
+Details: [gittr `docs/GITTR_PAGES_CURATION.md`](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr?file=docs/GITTR_PAGES_CURATION.md&branch=main). Operator script: [`scripts/README.md`](scripts/README.md).
 
 ## What we added (gittr Pages)
 
@@ -72,11 +72,11 @@ Use **this repo** (`master`), not a fresh clone of hzrd149’s repository.
    Syncs this repo into the Docker build, copies compose files from gittr’s `infra/nsite-gateway/`, and restarts the stack. Does **not** overwrite an existing server `.env`.
 
 3. **DNS:** `pages.gittr.space` and wildcard `*.pages.gittr.space` → your server.
-4. **TLS / nginx:** gittr [`infra/nsite-gateway/README.md`](https://github.com/arbadacarbaYK/gittr/blob/main/infra/nsite-gateway/README.md) and `nginx-pages.gittr.space.conf.example`.
+4. **TLS / nginx:** gittr [`infra/nsite-gateway/README.md`](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr?file=infra/nsite-gateway/README.md&branch=main) and `nginx-pages.gittr.space.conf.example`.
 
 Production env (no secrets) is maintained in **gittr**:
 
-[`gittr/infra/nsite-gateway/gittr-pages.production.env`](https://github.com/arbadacarbaYK/gittr/blob/main/infra/nsite-gateway/gittr-pages.production.env)
+[`gittr/infra/nsite-gateway/gittr-pages.production.env`](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr?file=infra/nsite-gateway/gittr-pages.production.env&branch=main)
 
 | Variable | gittr production |
 |----------|------------------|
@@ -143,4 +143,4 @@ We do not open PRs to hzrd149 for gittr-specific code.
 
 MIT License — see [LICENSE](LICENSE).  
 Copyright © 2025 **hzrd149** (original nsite-gateway).  
-Changes in [arbadacarbaYK/nsite-gateway](https://github.com/arbadacarbaYK/nsite-gateway) are distributed under the same terms.
+Changes in [arbadacarbaYK/nsite-gateway](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/nsite-gateway) are distributed under the same terms.

@@ -18,4 +18,4 @@ node scripts/publish-curation-mutelist.cjs
 - Publishes the default NIP-33 list (`d=""`) so `getReplaceable(Mutelist, pubkey)` matches upstream.
 - Set gateway `CURATION_USER` to the curator **hex pubkey** only (never `nsec` in `.env`).
 
-Full curation vs blocklist: [gittr `docs/GITTR_PAGES_CURATION.md`](https://github.com/arbadacarbaYK/gittr/blob/main/docs/GITTR_PAGES_CURATION.md).
+Full curation vs blocklist: [gittr `docs/GITTR_PAGES_CURATION.md`](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr?file=docs/GITTR_PAGES_CURATION.md&branch=main).
