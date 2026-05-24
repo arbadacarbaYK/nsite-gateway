@@ -24,12 +24,14 @@ For core gateway behavior (caching, hostname rules, Blossom proxy, Docker layout
 
 ## What we added (gittr Pages)
 
-| Feature | Purpose |
-|--------|---------|
-| `GET /status/manifests.json` | JSON site directory for [gittr.space/pages](https://gittr.space/pages) |
-| `hasIndexHtml` | JSON feed lists only manifests that include `/index.html` |
-| `GITTR_SYNC_MUTED_PUBKEYS` | Server env backup for the publisher blocklist until the relay mute list is live |
-| `scripts/publish-curation-mutelist.cjs` | Operator script to publish/update the curator NIP-51 mute list |
+| Feature | Purpose | Back to hzrd149? |
+|--------|---------|------------------|
+| `GET /status/manifests.json` | JSON site directory for [gittr.space/pages](https://gittr.space/pages) | **No** — fork only (a PR branch exists locally; never opened on his repo) |
+| `hasIndexHtml` | JSON feed lists only manifests that include `/index.html` | **No** — gittr-only (part of `manifests.json`) |
+| `GITTR_SYNC_MUTED_PUBKEYS` | Server env backup for the publisher blocklist until the relay mute list is live | **No** — gittr-only |
+| `scripts/publish-curation-mutelist.cjs` | Operator script to publish/update the curator NIP-51 mute list | **No** — gittr-only |
+
+**Already merged into [hzrd149/nsite-gateway](https://github.com/hzrd149/nsite-gateway)** (not gittr-only): status “updated” time for manifest-only republishes + keep newest manifest per site — [PR #21](https://github.com/hzrd149/nsite-gateway/pull/21) (merged May 2026). Our fork includes that via the v3.6.2 line / merge history.
 
 - **`GET /status`** — HTML table of all indexed manifests (operator view).
 - **`GET /status/manifests.json`** + gittr **`/pages`** — public “sites with a homepage” directory.
