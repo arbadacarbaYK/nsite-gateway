@@ -1,237 +1,121 @@
-# nsite-gateway
+# nsite-gateway (gittr Pages fork)
 
-A Deno + Hono gateway that serves
-[static websites published on Nostr](https://github.com/nostr-protocol/nips/blob/master/5A.md)
-(the nsite protocol).
+**Production:** [https://pages.gittr.space](https://pages.gittr.space)  
+**Upstream:** [hzrd149/nsite-gateway](https://github.com/hzrd149/nsite-gateway) (NIP-5A / nsite)  
+**App repo:** [arbadacarbaYK/gittr](https://github.com/arbadacarbaYK/gittr) — builds and deploys this fork as the Pages gateway Docker image.
 
-Sites are identified by site manifest events (kind `15128` for root sites, kind
-`35128` for named sites, and kind `5128` for snapshots) and blobs served via
-[Blossom](https://github.com/hzrd149/blossom).
+This repository is **not** a generic copy-paste of upstream. Branch **`master`** is what we run for **gittr Pages**: hzrd149 **v3.6.2** plus gittr-only features below. We do **not** open PRs upstream for gittr-specific code.
 
-## Configuring
+---
 
-All configuration is done through the `.env` file. Start by copying the example
-file and modifying it.
+## What this fork adds
+
+| Feature | Purpose |
+|--------|---------|
+| `GET /status/manifests.json` | JSON site directory for [gittr.space/pages](https://gittr.space/pages) |
+| `hasIndexHtml` | JSON feed lists only manifests that include `/index.html` |
+| `GITTR_SYNC_MUTED_PUBKEYS` | Server env backup for the publisher blocklist until the relay mute list is live |
+| `scripts/publish-curation-mutelist.cjs` | Operator script to publish/update the curator NIP-51 mute list |
+
+- **`GET /status`** — HTML table of all indexed manifests (operator view).
+- **`GET /status/manifests.json`** + gittr **`/pages`** — public “sites with a homepage” directory.
+
+Curation details: [gittr `docs/GITTR_PAGES_CURATION.md`](https://github.com/arbadacarbaYK/gittr/blob/main/docs/GITTR_PAGES_CURATION.md). Operator scripts: [`scripts/README.md`](scripts/README.md).
+
+---
+
+## Deploy (production)
+
+Do **not** use upstream’s `git clone hzrd149/nsite-gateway` flow for gittr production.
+
+1. Clone **this fork** (`master`) on your machine.
+2. From the **gittr** repo root, run:
+
+   ```bash
+   export DEPLOY_HOST=your.server
+   export NSITE_GATEWAY_SRC=/path/to/this/fork   # optional; default ../nsite-gateway-pr
+   ./scripts/deploy-nsite-gateway.sh
+   ```
+
+   That syncs this repo into the gateway Docker build context, copies compose files from gittr’s `infra/nsite-gateway/`, and restarts the stack. It **does not overwrite** an existing server `.env`.
+
+3. **DNS:** `pages.gittr.space` and wildcard `*.pages.gittr.space` → your server.
+4. **TLS / nginx:** see gittr [`infra/nsite-gateway/README.md`](https://github.com/arbadacarbaYK/gittr/blob/main/infra/nsite-gateway/README.md) and `nginx-pages.gittr.space.conf.example`.
+
+Canonical production env (no secrets) lives in **gittr**, not in this fork:
+
+[`gittr/infra/nsite-gateway/gittr-pages.production.env`](https://github.com/arbadacarbaYK/gittr/blob/main/infra/nsite-gateway/gittr-pages.production.env)
+
+| Variable | gittr production |
+|----------|------------------|
+| `PUBLIC_DOMAIN` | `pages.gittr.space` (hostname only, v3.6.1+) |
+| `BLOSSOM_SERVERS` | `https://blossom.gittr.space,https://blossom.band,https://nostr.download` |
+| `NOSTR_RELAYS` | Damus, nos.lol, Primal, Nostr.band, **nsite.run** |
+| `CURATION_USER` | gittr operator pubkey (hex) — mute list on relays |
+| `GITTR_SYNC_MUTED_PUBKEYS` | Set on deploy from gittr `PUBLISHER_BLOCKLIST` (not committed) |
+
+`BLOSSOM_SERVERS` is the fallback when a publisher has no kind `10063` Blossom list. **blossom.gittr.space** is tried first (where gittr Pages uploads land).
+
+---
+
+## Local development
 
 ```sh
 cp .env.example .env
-```
-
-### Environment Variables
-
-| Variable                 | Default                                    | Description                                                                                                                                                                                                                                                                                                                                                  |
-| ------------------------ | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `LOOKUP_RELAYS`          | `wss://user.kindpag.es,wss://purplepag.es` | Comma-separated relays used to look up a user's NIP-65 relay list (kind `10002`) and blossom server list (kind `10063`)                                                                                                                                                                                                                                      |
-| `NOSTR_RELAYS`           | _(none)_                                   | Extra relays added to every event query, supplemental to the user's own outbox relays                                                                                                                                                                                                                                                                        |
-| `CACHE_RELAYS`           | _(auto-detect `ws://localhost:4869`)_      | Relays to persist all fetched events to (a local Nostr cache relay). Auto-detected if a relay is running on `localhost:4869`                                                                                                                                                                                                                                 |
-| `BLOSSOM_SERVERS`        | _(none)_                                   | Comma-separated fallback blossom servers used when a user has no `10063` event and the manifest has no `server` tags                                                                                                                                                                                                                                         |
-| `BLOSSOM_PROXY`          | _(auto-detect `http://localhost:24242`)_   | Optional upstream blossom proxy checked first for every blob (see [Blossom Proxy](#blossom-proxy)). Auto-detected if a proxy is running on `localhost:24242`                                                                                                                                                                                                 |
-| `MAX_FILE_SIZE`          | `128 MB`                                   | Maximum blob size to serve (e.g. `"2 MB"`). Enforced via `Content-Length` header and during streaming                                                                                                                                                                                                                                                        |
-| `CACHE_PATH`             | _(Deno default KV location)_               | File path for the persistent Deno KV store (e.g. `./data/cache`). Omit to use Deno's default location                                                                                                                                                                                                                                                        |
-| `CACHE_TIME`             | `3600`                                     | TTL in seconds for all KV cache entries (DNS lookups, blob server hints, user profiles)                                                                                                                                                                                                                                                                      |
-| `BLOB_SERVER_TTL`        | `604800`                                   | TTL in seconds for the preferred verified blob source cache (`["blob-server", sha256]`), allowing trusted sources to stick around longer than general cache entries                                                                                                                                                                                          |
-| `BLOB_BAD_SOURCE_TTL`    | `86400`                                    | TTL in seconds for a bad `(sha256, server)` verification result before that source is eligible to be retried for the blob                                                                                                                                                                                                                                    |
-| `VERIFY_WORKER_POOL_MAX` | `4`                                        | Maximum number of blob verification workers created dynamically to hash responses in parallel                                                                                                                                                                                                                                                                |
-| `PUBLIC_DOMAIN`          | _(none)_                                   | The gateway's own public domain. When set, it is used for constructing canonical site URLs on the homepage and status pages                                                                                                                                                                                                                                  |
-| `NSITE_HOST`             | `0.0.0.0`                                  | IP address the server binds to                                                                                                                                                                                                                                                                                                                               |
-| `NSITE_PORT`             | `3000`                                     | Port the server listens on                                                                                                                                                                                                                                                                                                                                   |
-| `ONION_HOST`             | _(none)_                                   | If set to a `.onion` URL, every nsite response includes an `Onion-Location` header pointing to the Tor mirror                                                                                                                                                                                                                                                |
-| `CURATION_USER`          | _(none)_                                   | Hex pubkey of a curator whose [NIP-51 mute list](https://github.com/nostr-protocol/nips/blob/master/51.md) (kind `10000`) is loaded into the in-memory event store at startup and refreshed on a timer. Sites whose author pubkey appears in **public** `p` tags on that list are omitted from the home page (encrypted mutes in `content` are not applied). |
-| `CURATION_REFRESH`       | `600` (10 min)                             | How often to re-fetch the curator mute list, in seconds                                                                                                                                                                                                                                                                                                      |
-
-## Running with Deno
-
-```sh
-deno task start
-```
-
-For local development with file watching:
-
-```sh
+# edit .env — see gittr production table above for realistic values
 deno task dev
 ```
 
-The Deno tasks already include the required flags (`--unstable-kv`,
-`--env-file=.env`, and the necessary permission flags).
+Gateway listens on `http://localhost:3000` (or `NSITE_PORT`). For a quick check of fork endpoints: `/status`, `/status/manifests.json`.
 
-If `NOSTR_RELAYS` is set, the gateway will bulk-fetch all known site manifests
-(kinds `15128`, `35128`, and `5128`) from those relays at startup,
-pre-populating the in-memory event store, and then re-check those relays every
-10 minutes for newer manifest events.
+---
 
-If `CURATION_USER` is set, the gateway loads that user's mute list via the same
-event loader used elsewhere, keeps it in `eventStore`, and refreshes it on the
-interval given by `CURATION_REFRESH` in seconds (independent of `NOSTR_RELAYS`).
+## Configuration
 
-The gateway **never publishes** that list — you sign kind `10000` yourself (see
-`scripts/publish-curation-mutelist.cjs`). Relays are the public relays in
-`NOSTR_RELAYS` / the curator's NIP-65 outboxes, not a special nsite-only kind.
-`CACHE_RELAYS` only **writes fetched events** to a local cache relay; it does not
-replace publishing to the wider network.
+Copy `.env.example` → `.env`. All settings are environment variables.
 
-### gittr-pages branch extras
+| Variable | Default (example file) | Description |
+| -------- | ---------------------- | ----------- |
+| `LOOKUP_RELAYS` | kindpages + purplepag.es | NIP-65 / kind `10063` lookup |
+| `NOSTR_RELAYS` | _(see `.env.example`)_ | Extra relays for manifest hydration |
+| `BLOSSOM_SERVERS` | gittr-oriented fallbacks in comments | Fallback Blossom when no `10063` / manifest `server` tags |
+| `BLOSSOM_PROXY` | _(auto localhost:24242)_ | Optional BUD-11 proxy checked first |
+| `PUBLIC_DOMAIN` | `pages.gittr.space` in comments | Gateway hostname for homepage / status links |
+| `CACHE_PATH` | `./data/cache` | Deno KV persistence |
+| `CACHE_TIME` | `3600` | KV TTL (seconds) |
+| `CURATION_USER` | _(unset)_ | Hex pubkey — loads kind `10000` mute list |
+| `CURATION_REFRESH` | `600` | Mute list refresh interval (seconds) |
+| `GITTR_SYNC_MUTED_PUBKEYS` | _(unset)_ | Comma-separated hex pubkeys (gittr blocklist backup) |
+| `NSITE_HOST` / `NSITE_PORT` | `0.0.0.0` / `3000` | Bind address |
 
-- `GET /status/manifests.json` — machine-readable directory (curation + `hasIndexHtml`)
-- `GITTR_SYNC_MUTED_PUBKEYS` — optional hex backup until the relay mute list is live
-- `hasIndexHtml` on indexed manifests (browseable homepages only in the JSON feed)
+Full upstream variable list and behavior: [hzrd149/nsite-gateway README](https://github.com/hzrd149/nsite-gateway/blob/master/README.md).
 
-## Cache Backends
+The gateway **never publishes** the curator mute list — you sign kind `10000` yourself (`scripts/publish-curation-mutelist.cjs`).
 
-### Deno KV (metadata cache)
+---
 
-The gateway uses Deno KV to cache:
+## Protocol (short)
 
-- **DNS resolution** results (hostname → pubkey + site identifier)
-- **Blob server hints** — the last successful server for each blob (tried first
-  on subsequent requests)
-- **Blob server lists** — the full ordered server list for each blob
-- **User profiles** (kind `0`) — author display names shown on the homepage and
-  status pages
+A Deno + Hono gateway serves **static sites** published on Nostr ([NIP-5A](https://github.com/nostr-protocol/nips/blob/master/5A.md)):
 
-To enable persistent caching, set `CACHE_PATH`:
+- Manifests: kind `15128` (root), `35128` (named), `5128` (snapshots).
+- Blobs: [Blossom](https://github.com/hzrd149/blossom).
 
-```sh
-CACHE_PATH="./data/cache"
-```
+Hostname resolution (in order): npub subdomain, snapshot label, named site label, then CNAME. On gittr, sites look like `https://<label>.pages.gittr.space/`.
 
-If `CACHE_PATH` is omitted, Deno uses its default local KV location.
+---
 
-### Nostr Event Cache
+## Pulling upstream fixes
 
-All fetched Nostr events are held in an in-memory event store for the process
-lifetime. To persist events across restarts, point `CACHE_RELAYS` at a local
-Nostr relay:
+When you want generic fixes from hzrd149:
 
-```sh
-CACHE_RELAYS="ws://localhost:4869"
-```
+1. Fetch tags/releases from `hzrd149/nsite-gateway`.
+2. Merge or rebase into **`master`**.
+3. Re-apply gittr-only files if needed (`manifests.json`, `hasIndexHtml`, `gittr-muted-pubkeys`, scripts).
+4. Push **`master`** and redeploy via gittr’s `deploy-nsite-gateway.sh`.
 
-If a relay is already running on `localhost:4869`, it will be detected and used
-automatically.
+---
 
-### HTTP Cache
+## License
 
-All nsite responses include strong ETags (the blob's sha256 hash) and
-`Cache-Control: public, max-age=3600`. Conditional requests with `If-None-Match`
-are handled — matching ETags return `304 Not Modified` without fetching the blob
-at all.
-
-## Running Directly from JSR
-
-You can run the published package without cloning this repository:
-
-```sh
-deno run --unstable-kv --env-file=.env --allow-env --allow-net --allow-read --allow-write jsr:@hzrd149/nsite-gateway
-```
-
-## Running with Docker Compose
-
-The included `docker-compose.yml` sets up a full production stack:
-
-- **nsite-gateway** — the gateway itself
-- **Caddy** — TLS termination and reverse proxy
-- **flower-cache** — local blossom proxy (wired as `BLOSSOM_PROXY`)
-
-```sh
-git clone https://github.com/hzrd149/nsite-gateway.git
-cd nsite-gateway
-docker compose up
-```
-
-Persistent Deno KV caching is enabled via a Docker volume mounted at `/cache`.
-
-> **Note:** You must create a `Caddyfile` before starting the stack — the
-> `docker-compose.yml` mounts `./Caddyfile` into the Caddy container but the
-> file is not included in the repository.
-
-Once running, the gateway is accessible at `http://localhost:3000`.
-
-## Running with Docker
-
-```sh
-docker run --rm -it --name nsite -p 3000:3000 ghcr.io/hzrd149/nsite-gateway
-```
-
-> **Note:** The default image CMD does not include `--unstable-kv` or
-> `--allow-write`, so Deno KV caching is inactive. Use a custom entrypoint or
-> the `docker compose` setup if you need persistent caching.
-
-## Hostname Resolution
-
-The gateway resolves incoming hostnames to a Nostr site using three strategies
-(in order):
-
-1. **npub subdomain** — `npub1abc....nsite.example.com`: the leftmost label is a
-   valid bech32 `npub`, decoded to a hex pubkey. Serves the root site (kind
-   `15128`).
-2. **Snapshot label** — `v<50-char-base36-event-id>.nsite.example.com`: the
-   leftmost label starts with `v` and is followed by a 50-character base36
-   snapshot event id. Serves the exact snapshot event (kind `5128`).
-3. **Named site label** — a 50-character base36-encoded pubkey followed by a
-   1–13 character site identifier (e.g.
-   `<base36pubkey><identifier>.nsite.example.com`). Serves a named site (kind
-   `35128`).
-4. **CNAME resolution** — if the hostname doesn't parse directly as an nsite
-   label, the gateway resolves CNAME records. This enables custom domains like
-   `myblog.com → npub1abc....nsite.example.com`.
-
-## Homepage
-
-The gateway serves a built-in homepage at the root domain that displays all
-currently cached sites as a card grid. Each card shows the site title,
-description, author name, path count, and last-updated time.
-
-To replace the built-in homepage with your own, place an `index.html` file in
-the `public/` directory at the project root.
-
-## Status Dashboard
-
-The gateway serves a built-in status dashboard at `/status`:
-
-- **`GET /status`** — table of all site manifests currently loaded in the event
-  store, with titles, authors, path counts, and last-updated timestamps.
-- **`GET /status/:address`** — detailed view for any `npub`, `naddr`,
-  `nprofile`, raw hex pubkey, or `v<snapshotIdB36>` snapshot id: site metadata,
-  relays, blossom servers, full path table with cached server info, and the raw
-  manifest JSON.
-
-Status pages are always `Cache-Control: no-store`.
-
-## Onion Header
-
-If you operate a Tor mirror, set `ONION_HOST` and the gateway will include an
-`Onion-Location` header in every nsite response:
-
-```sh
-ONION_HOST="http://examplehiddenservice.onion"
-```
-
-## Blossom Proxy
-
-You can configure a `BLOSSOM_PROXY` server that will be checked first for all
-blob requests before falling back to other servers. When set, the gateway will:
-
-1. Check the proxy first for each blob request
-2. Include BUD-10 discovery hints as query parameters:
-   - `xs` parameters: domain names of all known blossom servers (server hints)
-   - `as` parameter: the author's pubkey (author hint)
-
-This allows the proxy to locate blobs on other servers if it doesn't have them
-cached.
-
-```sh
-BLOSSOM_PROXY="https://blossom-proxy.example.com"
-```
-
-The proxy URL is constructed as:
-
-```
-<BLOSSOM_PROXY>/<sha256>?xs=server1.com&xs=server2.com&as=<pubkey>
-```
-
-The blossom proxy specification is defined in
-[BUD-11](https://github.com/hzrd149/blossom/pull/89). For a reference
-implementation, see [flower-cache](https://github.com/hzrd149/flower-cache).
-
-If a proxy is already running on `localhost:24242`, it will be detected and used
-automatically without setting `BLOSSOM_PROXY`.
+MIT — same as upstream.
