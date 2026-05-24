@@ -22,6 +22,20 @@ For core gateway behavior (caching, hostname rules, Blossom proxy, Docker layout
 
 ---
 
+## Curation and blocklist (hzrd149 + gittr)
+
+hzrd149’s gateway (**v3.6.2+**) already includes **curation**: set `CURATION_USER` and it **loads** a NIP-51 kind `10000` mute list from relays and hides those authors on the built-in home page and `/status`. It does **not** publish that list for you — you sign kind `10000` yourself ([his README](https://github.com/hzrd149/nsite-gateway#configuring)).
+
+We **use** that feature in production (`CURATION_USER` = gittr operator) and **extended** it so the same pubkeys as gittr’s platform-wide **`PUBLISHER_BLOCKLIST`** apply on Pages:
+
+| Piece | From hzrd149? | What gittr added |
+|-------|----------------|------------------|
+| Read mute list (`CURATION_USER`, `CURATION_REFRESH`, `src/services/curation.ts`) | **Yes** — in v3.6.2 | We point it at the gittr operator and apply mutes on **`manifests.json`** too |
+| Publish / merge blocklist → kind `10000` on relays | **No** | `scripts/publish-curation-mutelist.cjs` merges `NEXT_PUBLIC_PUBLISHER_BLOCKLIST` with the existing list (does not replace `p` tags) |
+| Until relays have the new list | **No** | `GITTR_SYNC_MUTED_PUBKEYS` on deploy (from `ui/.env.local` blocklist) + `src/helpers/gittr-muted-pubkeys.ts` |
+
+Details: [gittr `docs/GITTR_PAGES_CURATION.md`](https://github.com/arbadacarbaYK/gittr/blob/main/docs/GITTR_PAGES_CURATION.md). Operator script: [`scripts/README.md`](scripts/README.md).
+
 ## What we added (gittr Pages)
 
 ### gittr-only (not pushed back to hzrd149)
@@ -30,8 +44,7 @@ For core gateway behavior (caching, hostname rules, Blossom proxy, Docker layout
 |--------|------------------|
 | **Machine-readable site directory** — JSON list of published sites for [gittr.space/pages](https://gittr.space/pages) and automation (`GET /status/manifests.json`) | **No** — fork only (PR branch prepared locally; never opened on his repo) |
 | **Homepage-only filter** — that JSON lists only sites with `/index.html`, not empty manifests (`hasIndexHtml`) | **No** — part of the row above |
-| **Publisher blocklist backup** — server env holds blocklisted pubkeys until the curator mute list is on relays (`GITTR_SYNC_MUTED_PUBKEYS`) | **No** |
-| **Curator mute-list publishing** — operator script to sign and publish/update the NIP-51 kind `10000` list (`scripts/publish-curation-mutelist.cjs`) | **No** |
+| **Platform blocklist on Pages** — sync + publish wiring above (`GITTR_SYNC_MUTED_PUBKEYS`, publish script, `gittr-muted-pubkeys.ts`) | **No** — gittr-only (builds on his **read** curation, not a duplicate of it) |
 
 ### Pushed back to hzrd149 (merged)
 
@@ -40,8 +53,6 @@ For core gateway behavior (caching, hostname rules, Blossom proxy, Docker layout
 | **Correct “updated” on `/status`** when a site is republished via manifest only (no new snapshot), and **keep the newest manifest** per site address | **Yes** — [PR #21](https://github.com/hzrd149/nsite-gateway/pull/21) merged May 2026 |
 
 Implementation detail: HTML **`/status`** = all indexed manifests (operator). **`/status/manifests.json`** + gittr **`/pages`** = public “sites with a homepage” directory.
-
-Curation: [gittr `docs/GITTR_PAGES_CURATION.md`](https://github.com/arbadacarbaYK/gittr/blob/main/docs/GITTR_PAGES_CURATION.md). Scripts: [`scripts/README.md`](scripts/README.md).
 
 ---
 
@@ -105,7 +116,7 @@ Copy `.env.example` → `.env`.
 
 Full variable reference from the original project: [hzrd149/nsite-gateway README](https://github.com/hzrd149/nsite-gateway/blob/master/README.md).
 
-The gateway **never publishes** the curator mute list — use `scripts/publish-curation-mutelist.cjs`.
+hzrd149’s gateway **never publishes** mute lists; gittr’s **`publish-curation-mutelist.cjs`** publishes the operator kind `10000` list aligned with **`PUBLISHER_BLOCKLIST`** (see [Curation and blocklist](#curation-and-blocklist-hzrd149--gittr) above).
 
 ---
 
