@@ -41,8 +41,9 @@ function blocklistHexFromUiEnv() {
   if (!fs.existsSync(UI_ENV)) return [];
   const text = fs.readFileSync(UI_ENV, "utf8");
   const m = text.match(/^NEXT_PUBLIC_PUBLISHER_BLOCKLIST=(.+)$/m);
-  if (!m) return [];
-  let v = m[1].trim();
+  const raw = m?.[1];
+  if (!raw) return [];
+  let v = raw.trim();
   if (
     (v.startsWith('"') && v.endsWith('"')) ||
     (v.startsWith("'") && v.endsWith("'"))
