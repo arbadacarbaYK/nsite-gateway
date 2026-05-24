@@ -1,10 +1,23 @@
 # nsite-gateway (gittr Pages fork)
 
 **Production:** [https://pages.gittr.space](https://pages.gittr.space)  
-**Upstream:** [hzrd149/nsite-gateway](https://github.com/hzrd149/nsite-gateway) (NIP-5A / nsite)  
 **App repo:** [arbadacarbaYK/gittr](https://github.com/arbadacarbaYK/gittr) — builds and deploys this fork as the Pages gateway Docker image.
 
-This repository is **not** a generic copy-paste of upstream. Branch **`master`** is what we run for **gittr Pages**: hzrd149 **v3.6.2** plus gittr-only features below. We do **not** open PRs upstream for gittr-specific code.
+## Upstream & attribution
+
+This project is a **fork** of **[hzrd149/nsite-gateway](https://github.com/hzrd149/nsite-gateway)** by **[hzrd149](https://github.com/hzrd149)** — a Deno + Hono gateway for [NIP-5A](https://github.com/nostr-protocol/nips/blob/master/5A.md) (nsite) static sites on Nostr, with blobs on [Blossom](https://github.com/hzrd149/blossom).
+
+| | |
+| --- | --- |
+| **Original repository** | https://github.com/hzrd149/nsite-gateway |
+| **Upstream README** | https://github.com/hzrd149/nsite-gateway/blob/master/README.md |
+| **Published package (upstream)** | [`jsr:@hzrd149/nsite-gateway`](https://jsr.io/@hzrd149/nsite-gateway) |
+| **Fork base** | upstream tag **v3.6.2** on branch **`master`** |
+| **License** | [MIT](LICENSE) — copyright **hzrd149** (see file); gittr-specific additions in this fork are under the same license |
+
+We are grateful for upstream’s work. **gittr Pages** runs this fork in production; gittr-only changes are listed below. For generic gateway behavior (caching, hostname rules, Blossom proxy, Docker layout), prefer the **upstream README** unless this document says otherwise.
+
+This repository is **not** a drop-in replacement for upstream’s repo: branch **`master`** includes gittr-only code we do **not** upstream as PRs.
 
 ---
 
@@ -118,4 +131,6 @@ When you want generic fixes from hzrd149:
 
 ## License
 
-MIT — same as upstream.
+MIT License — see [LICENSE](LICENSE).  
+Copyright © 2025 **hzrd149** (original nsite-gateway).  
+Modifications in this fork © contributors to [arbadacarbaYK/nsite-gateway](https://github.com/arbadacarbaYK/nsite-gateway); distributed under the same terms.
