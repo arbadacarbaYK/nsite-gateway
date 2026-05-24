@@ -20,3 +20,15 @@ See `scripts/README.md` and [gittr docs](https://github.com/arbadacarbaYK/gittr/
 ## Deploy
 
 Built by [gittr](https://github.com/arbadacarbaYK/gittr) `scripts/deploy-nsite-gateway.sh` (syncs this repo into the gateway Docker image). Secrets stay on the server (`.env`, never committed).
+
+## Production env (pages.gittr.space)
+
+Committed in the **gittr** repo as `infra/nsite-gateway/gittr-pages.production.env`. Important values:
+
+| Variable | gittr production |
+|----------|------------------|
+| `PUBLIC_DOMAIN` | `pages.gittr.space` (hostname only, v3.6.1+) |
+| `BLOSSOM_SERVERS` | `https://blossom.gittr.space,https://blossom.band,https://nostr.download` |
+| `NOSTR_RELAYS` | includes `wss://nsite.run` |
+
+`BLOSSOM_SERVERS` is the fallback chain when a publisher has no kind `10063` list. **blossom.gittr.space** is tried first (where gittr Pages uploads land).
