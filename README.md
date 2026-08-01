@@ -4,7 +4,7 @@
 **This repository:** [arbadacarbaYK/nsite-gateway](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/nsite-gateway) — the gateway we build and run for gittr Pages.  
 **App repo:** [arbadacarbaYK/gittr](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr) — deploy script, nginx example, production `.env` template.
 
-Branch **`master`** is our production line (based on hzrd149 **v3.6.2**, plus gittr-only features below).
+Branch **`master`** is our production line (based on hzrd149 **v3.6.2**, plus gittr-only features below). We **selectively** pull useful patches from later hzrd149 releases (see CHANGELOG) — we do **not** take every upstream change.
 
 ## Forked from
 
@@ -15,7 +15,7 @@ This codebase was **forked from** **[hzrd149/nsite-gateway](https://github.com/h
 | **Forked from** | https://github.com/hzrd149/nsite-gateway |
 | **Original README** | https://github.com/hzrd149/nsite-gateway/blob/master/README.md |
 | **Original JSR package** | [`jsr:@hzrd149/nsite-gateway`](https://jsr.io/@hzrd149/nsite-gateway) |
-| **Our base revision** | hzrd149 tag **v3.6.2** |
+| **Our base revision** | hzrd149 tag **v3.6.2** + selective patches from **v3.6.3** (root-host DNS skip, applesauce ^6.2) |
 | **License** | [MIT](LICENSE) — copyright **hzrd149** in `LICENSE`; our changes under the same license |
 
 For core gateway behavior (caching, hostname rules, Blossom proxy, Docker layout), hzrd149’s README is still the best reference for the shared foundation. **This README** covers how **we** run and extend it for gittr Pages.

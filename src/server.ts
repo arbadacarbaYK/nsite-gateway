@@ -52,12 +52,15 @@ app.use(
 
 app.all("*", async (c) => {
   const hostname = new URL(c.req.url).hostname;
-  const pointer = await resolvePubkeyFromHostname(hostname);
-  if (pointer) {
-    return await handleSiteRequest(c, pointer);
-  }
 
+  // Root hosts are already known locally; only resolve potential site hostnames.
+  // (from hzrd149/nsite-gateway v3.6.3 / PR #26 — avoids ~15s CNAME hangs on PUBLIC_DOMAIN)
   if (!isGatewayRootHost(hostname)) {
+    const pointer = await resolvePubkeyFromHostname(hostname);
+    if (pointer) {
+      return await handleSiteRequest(c, pointer);
+    }
+
     return c.html(
       html`
         <!DOCTYPE html>${InvalidAddress({ hostname })}

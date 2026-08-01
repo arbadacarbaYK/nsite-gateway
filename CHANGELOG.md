@@ -1,5 +1,14 @@
 # nsite-gateway
 
+## gittr fork (selective from hzrd149 v3.6.3)
+
+Not a full rebase onto v3.6.3. Taken only:
+
+- Skip hostname resolution for gateway root hosts (hzrd149 PR #26) — avoids long CNAME hangs on `PUBLIC_DOMAIN` / localhost
+- Pin applesauce packages to ^6.2.x (and matching `deno.lock`) from hzrd149 v3.6.3
+
+Not taken (on purpose): live relay sync (`RLEAY_SYNC_INTERVAL=live`), site-card CSS, full version bump to 3.6.3.
+
 ## 3.6.2
 
 ### Patch Changes
