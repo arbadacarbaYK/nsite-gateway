@@ -44,6 +44,7 @@ Details: [gittr `docs/GITTR_PAGES_CURATION.md`](https://gittr.space/npub1n2ph08n
 
 | Feature | Back to hzrd149? |
 |--------|------------------|
+| **Live relay sync + ingest** — `RELAY_SYNC_INTERVAL=live`, `GET /status/ingest`, HTML must-revalidate | **No** — gittr needs its own relay (`wss://relay.gittr.space`) immediately; hzrd149 has live sync we adopted |
 | **Machine-readable site directory** — JSON list of published sites for [gittr.space/pages](https://gittr.space/pages) and automation (`GET /status/manifests.json`) | **No** — fork only (PR branch prepared locally; never opened on his repo) |
 | **Homepage-only filter** — that JSON lists only sites with `/index.html`, not empty manifests (`hasIndexHtml`) | **No** — part of the row above |
 | **Platform blocklist on Pages** — sync + publish wiring above (`GITTR_SYNC_MUTED_PUBKEYS`, publish script, `gittr-muted-pubkeys.ts`) | **No** — gittr-only (builds on his **read** curation, not a duplicate of it) |
@@ -71,7 +72,7 @@ Use **this repo** (`master`), not a fresh clone of hzrd149’s repository.
    ./scripts/deploy-nsite-gateway.sh
    ```
 
-   Syncs this repo into the Docker build, copies compose files from gittr’s `infra/nsite-gateway/`, and restarts the stack. Does **not** overwrite an existing server `.env`.
+   Syncs this repo into the Docker build, copies compose files from gittr’s `infra/nsite-gateway/`, and restarts the stack. Deploy **merges** `NOSTR_RELAYS` / `RELAY_SYNC_INTERVAL` from the production template into the existing server `.env` (does not wipe `CURATION_USER`).
 
 3. **DNS:** `pages.gittr.space` and wildcard `*.pages.gittr.space` → your server.
 4. **TLS / nginx:** gittr [`infra/nsite-gateway/README.md`](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr?file=infra/nsite-gateway/README.md&branch=main) and `nginx-pages.gittr.space.conf.example`.
@@ -84,7 +85,8 @@ Production env (no secrets) is maintained in **gittr**:
 |----------|------------------|
 | `PUBLIC_DOMAIN` | `pages.gittr.space` (hostname only, v3.6.1+) |
 | `BLOSSOM_SERVERS` | `https://blossom.gittr.space,https://blossom.band,https://nostr.download` |
-| `NOSTR_RELAYS` | Damus, nos.lol, Primal, Nostr.band, **nsite.run** |
+| `NOSTR_RELAYS` | **`wss://relay.gittr.space` first**, then Damus, nos.lol, Primal, Nostr.band, nsite.run |
+| `RELAY_SYNC_INTERVAL` | `live` |
 | `CURATION_USER` | gittr operator pubkey (hex) — mute list on relays |
 | `GITTR_SYNC_MUTED_PUBKEYS` | Set on deploy from gittr `PUBLISHER_BLOCKLIST` (not committed) |
 

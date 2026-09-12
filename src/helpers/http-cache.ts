@@ -2,6 +2,12 @@ export function createStrongEtag(value: string): string {
   return `"${value}"`;
 }
 
+/**
+ * Site HTML/blobs are content-addressed (ETag = sha256). Browsers must
+ * revalidate so a new kind 35128 is not hidden behind a 1-hour max-age.
+ */
+export const SITE_HTML_CACHE_CONTROL = "public, max-age=0, must-revalidate";
+
 function normalizeEtag(value: string): string {
   const trimmed = value.trim();
   return trimmed.startsWith("W/") ? trimmed.slice(2).trim() : trimmed;

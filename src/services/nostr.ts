@@ -18,16 +18,18 @@ import {
 import type { NostrEvent } from "applesauce-core/helpers";
 import { createEventLoaderForStore } from "applesauce-loaders/loaders";
 import { RelayPool } from "applesauce-relay";
-import { takeUntil, timer } from "rxjs";
+import { type Subscription, takeUntil, timer } from "rxjs";
 import {
   CACHE_RELAYS,
   LOOKUP_RELAYS,
+  MANIFEST_STALE_TIME,
   NOSTR_RELAYS,
   OUTBOXES_STALE_TIME,
   PROFILES_STALE_TIME,
   SERVERS_STALE_TIME,
 } from "../env.ts";
 import logger from "../helpers/debug.ts";
+import { siteManifestSyncSinceUnix } from "../helpers/manifest-sync-since.ts";
 import { formatAgeFromUnix } from "../helpers/format.ts";
 import type {
   ReplaceableSiteAddress,
@@ -140,8 +142,10 @@ export async function syncSiteManifests(
 ): Promise<number> {
   if (!relays || relays.length === 0) return 0;
 
-  const latestCreatedAt = getLatestSiteManifestCreatedAt();
-  const since = latestCreatedAt === undefined ? undefined : latestCreatedAt + 1;
+  const since = siteManifestSyncSinceUnix(
+    getLatestSiteManifestCreatedAt(),
+    Math.floor(Date.now() / 1000),
+  );
 
   return await requestAndStoreEvents(relays, {
     kinds: SITE_MANIFEST_KINDS,
@@ -154,8 +158,10 @@ export async function syncSiteManifestDeletes(
 ): Promise<number> {
   if (!relays || relays.length === 0) return 0;
 
-  const latestCreatedAt = getLatestSiteDeleteCreatedAt();
-  const since = latestCreatedAt === undefined ? undefined : latestCreatedAt + 1;
+  const since = siteManifestSyncSinceUnix(
+    getLatestSiteDeleteCreatedAt(),
+    Math.floor(Date.now() / 1000),
+  );
 
   return await requestAndStoreEvents(relays, {
     // Get delete events
@@ -174,6 +180,33 @@ export async function syncNsiteEvents(relays = NOSTR_RELAYS): Promise<{
   const deletes = await syncSiteManifestDeletes(relays);
 
   return { manifests, deletes };
+}
+
+/** Persistent REQ so a publish on our own relay is in the store immediately. */
+export function subscribeNsiteEvents(relays = NOSTR_RELAYS): Subscription {
+  return pool.subscription(
+    relays,
+    [
+      { kinds: SITE_MANIFEST_KINDS },
+      {
+        kinds: [DELETE_EVENT_KIND],
+        "#k": SITE_MANIFEST_KINDS.map((kind) => String(kind)),
+      },
+    ],
+    {
+      id: "nsite-live-sync",
+      reconnect: Infinity,
+      resubscribe: true,
+    },
+  ).subscribe({
+    next: (response) => {
+      if (typeof response === "string") return;
+      eventStore.add(response);
+    },
+    error: (error) => {
+      console.error("Live relay sync failed", error);
+    },
+  });
 }
 
 if (CACHE_RELAYS) {
@@ -287,29 +320,40 @@ export async function getUserBlossomServers(pubkey: string, timeout = 5_000) {
   return servers?.map((server) => server.toString());
 }
 
-/** Loads a replaceable site manifest event from the store */
+const manifestsChecked = new Map<string, number>();
+
+function replaceableManifestKey(address: ReplaceableSiteAddress): string {
+  return `${address.kind}:${address.pubkey}:${address.identifier || ""}`;
+}
+
+/** Loads a replaceable site manifest; re-asks relays when the store copy is stale. */
 export async function getReplaceableManifest(
   address: ReplaceableSiteAddress,
   timeout = 5_000,
+  opts?: { fresh?: boolean },
 ) {
-  const manifest = eventStore.getReplaceable(
+  const key = replaceableManifestKey(address);
+  const cached = eventStore.getReplaceable(
     address.kind,
     address.pubkey,
     address.identifier,
   );
-  if (manifest) return manifest;
+  const checked = manifestsChecked.get(key);
+  const staleMs = Math.max(0, MANIFEST_STALE_TIME) * 1000;
+  const recentlyChecked = checked !== undefined && Date.now() - checked < staleMs;
+  if (!opts?.fresh && cached && recentlyChecked) return cached;
 
   log(`Loading manifest ${getReplaceableAddressFromPointer(address)}`);
 
   const outboxes = await getUserOutboxes(address.pubkey, timeout);
-  const relays = relaySet(outboxes, address.relays);
+  const relays = relaySet(outboxes, address.relays, NOSTR_RELAYS);
 
   log(
     `Loading manifest ${getReplaceableAddressFromPointer(address)} from ${
       relays.join(", ")
     }`,
   );
-  return await lastValueFrom(
+  const loaded = await lastValueFrom(
     eventLoader(
       // Load the address pointer from the outboxes and default relays
       { ...address, relays: relaySet(relays), cache: false },
@@ -318,6 +362,31 @@ export async function getReplaceableManifest(
       takeUntil(timer(timeout)),
     ),
     { defaultValue: undefined },
+  );
+  manifestsChecked.set(key, Date.now());
+  return eventStore.getReplaceable(
+    address.kind,
+    address.pubkey,
+    address.identifier,
+  ) ?? loaded ?? cached;
+}
+
+/** Targeted relay fetch after Push Manifest (named `d` or root when `d` is empty). */
+export async function ingestReplaceableManifest(
+  pubkey: string,
+  identifier: string,
+  timeout = 10_000,
+) {
+  const named = identifier.trim();
+  return await getReplaceableManifest(
+    {
+      type: "replaceable",
+      kind: named ? NAMED_SITE_MANIFEST_KIND : ROOT_SITE_MANIFEST_KIND,
+      pubkey,
+      identifier: named,
+    },
+    timeout,
+    { fresh: true },
   );
 }
 

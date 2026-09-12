@@ -5,6 +5,7 @@ import { extname } from "@std/path/posix";
 import { mergeBlossomServers } from "applesauce-common/helpers";
 import { BLOSSOM_PROXY, BLOSSOM_SERVERS, ONION_HOST } from "../env.ts";
 import {
+  SITE_HTML_CACHE_CONTROL,
   createStrongEtag,
   hasMatchingIfNoneMatch,
 } from "../helpers/http-cache.ts";
@@ -100,7 +101,7 @@ export async function handleSiteRequest(
   if (!match.is404 && hasMatchingIfNoneMatch(request.headers, etag)) {
     const headers = new Headers();
     headers.set("ETag", etag);
-    headers.set("Cache-Control", "public, max-age=3600");
+    headers.set("Cache-Control", SITE_HTML_CACHE_CONTROL);
     headers.set("Last-Modified", getSiteLastModified(manifest.created_at));
     appendOnionLocation(headers, site, manifest.pubkey, identifier);
     return new Response(null, { status: 304, headers });
@@ -164,7 +165,7 @@ export async function handleSiteRequest(
 
   // Set response headers
   headers.set("ETag", etag);
-  headers.set("Cache-Control", "public, max-age=3600");
+  headers.set("Cache-Control", SITE_HTML_CACHE_CONTROL);
   headers.set(
     "Last-Modified",
     upstream.headers.get("last-modified") ||

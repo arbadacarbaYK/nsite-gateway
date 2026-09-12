@@ -34,6 +34,33 @@ export const LOOKUP_RELAYS = relaySet(
 /** Extra nostr relays to use for loading site manifests */
 export const NOSTR_RELAYS = relaySet(getList("NOSTR_RELAYS"));
 
+/**
+ * How the gateway stays in sync with `NOSTR_RELAYS`.
+ * `live` = persistent REQ (needed when we read our own relay immediately).
+ * A positive number is seconds between bulk REQ passes.
+ * Upstream env name is misspelled `RLEAY_SYNC_INTERVAL`; we accept both.
+ */
+function parseRelaySyncInterval(): number | "live" {
+  const raw = (
+    Deno.env.get("RELAY_SYNC_INTERVAL") ||
+    Deno.env.get("RLEAY_SYNC_INTERVAL") ||
+    "live"
+  ).trim();
+  if (raw === "live") return "live";
+  const parsed = parseInt(raw, 10);
+  if (parsed > 0 && Number.isFinite(parsed)) return parsed;
+  return "live";
+}
+
+export const RELAY_SYNC_INTERVAL: number | "live" = parseRelaySyncInterval();
+/** @deprecated hzrd149 typo — same value as {@link RELAY_SYNC_INTERVAL} */
+export const RLEAY_SYNC_INTERVAL = RELAY_SYNC_INTERVAL;
+
+/** Seconds to trust a cached replaceable manifest before re-asking relays. */
+export const MANIFEST_STALE_TIME = Deno.env.get("MANIFEST_STALE_TIME")
+  ? parseInt(Deno.env.get("MANIFEST_STALE_TIME")!, 10)
+  : 15;
+
 const LOCAL_CACHE_RELAY = "ws://localhost:4869";
 const LOCAL_BLOSSOM_PROXY = "http://localhost:24242";
 

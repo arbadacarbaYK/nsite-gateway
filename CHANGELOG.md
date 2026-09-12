@@ -1,13 +1,20 @@
 # nsite-gateway
 
+## gittr Pages (this fork)
+
+- **Live relay sync** (`RELAY_SYNC_INTERVAL=live`, default) so kind 35128 on `wss://relay.gittr.space` is in the directory as soon as it is published. Periodic `since=latest+1` was skipping republishes older than some other site’s newest row.
+- **`GET /status/ingest?pubkey=&d=`** — force-load one named (or root) manifest after gittr Push Manifest.
+- Site HTML `Cache-Control: max-age=0, must-revalidate` (ETag is still the blob sha256) so a new manifest is not hidden for an hour in the browser.
+
 ## gittr fork (selective from hzrd149 v3.6.3)
 
 Not a full rebase onto v3.6.3. Taken only:
 
 - Skip hostname resolution for gateway root hosts (hzrd149 PR #26) — avoids long CNAME hangs on `PUBLIC_DOMAIN` / localhost
 - Pin applesauce packages to ^6.2.x (and matching `deno.lock`) from hzrd149 v3.6.3
+- Live relay sync (`subscribeNsiteEvents` / `RELAY_SYNC_INTERVAL=live`; upstream env name `RLEAY_SYNC_INTERVAL` still works)
 
-Not taken (on purpose): live relay sync (`RLEAY_SYNC_INTERVAL=live`), site-card CSS, full version bump to 3.6.3.
+Not taken (on purpose): site-card CSS, full version bump to 3.6.3.
 
 ## 3.6.2
 
