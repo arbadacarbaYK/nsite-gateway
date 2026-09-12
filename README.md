@@ -4,6 +4,8 @@
 **This repository:** [arbadacarbaYK/nsite-gateway](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/nsite-gateway) — the gateway we build and run for gittr Pages.  
 **App repo:** [arbadacarbaYK/gittr](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr) — deploy script, nginx example, production `.env` template.
 
+**This repo’s Page:** root [`index.html`](./index.html). After **Push Manifest**, save site name `nsite-gateway`.
+
 Branch **`master`** is our production line (based on hzrd149 **v3.6.2**, plus gittr-only features below). We **selectively** pull useful patches from later hzrd149 releases (see CHANGELOG) — we do **not** take every upstream change.
 
 ## Forked from
