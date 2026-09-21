@@ -1,6 +1,7 @@
 # nsite-gateway — gittr Pages
 
 **Production:** [https://pages.gittr.space](https://pages.gittr.space)  
+**Blossom this gateway reads:** [gittr-blossom](https://github.com/arbadacarbaYK/gittr-blossom) at [https://blossom.gittr.space](https://blossom.gittr.space) — the blob server we run for gittr Nostr git Pages and media.  
 **This repository:** [arbadacarbaYK/nsite-gateway](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/nsite-gateway) — the gateway we build and run for gittr Pages.  
 **App repo:** [arbadacarbaYK/gittr](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr) — deploy script, nginx example, production `.env` template.
 
