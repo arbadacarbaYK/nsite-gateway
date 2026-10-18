@@ -6,6 +6,13 @@
 - **`GET /status/ingest?pubkey=&d=`** — force-load one named (or root) manifest after gittr Push Manifest.
 - Site HTML `Cache-Control: max-age=0, must-revalidate` (ETag is still the blob sha256) so a new manifest is not hidden for an hour in the browser.
 
+## gittr fork (selective from hzrd149 v3.6.4 and v3.6.5)
+
+Taken without rebasing onto those tags:
+
+- Disable NIP-40 expiration timers (v3.6.4). Applesauce 6.2 uses one `setTimeout` per event; a far-future expiration spins the process.
+- Prefer the file name’s MIME type over Blossom’s `Content-Type` (v3.6.5, PR #27). A stylesheet stored as `text/plain` otherwise leaves the page unstyled.
+
 ## gittr fork (selective from hzrd149 v3.6.3)
 
 Not a full rebase onto v3.6.3. Taken only:

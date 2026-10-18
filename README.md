@@ -18,7 +18,7 @@ This codebase was **forked from** **[hzrd149/nsite-gateway](https://github.com/h
 | **Forked from** | https://github.com/hzrd149/nsite-gateway |
 | **Original README** | https://github.com/hzrd149/nsite-gateway/blob/master/README.md |
 | **Original JSR package** | [`jsr:@hzrd149/nsite-gateway`](https://jsr.io/@hzrd149/nsite-gateway) |
-| **Our base revision** | hzrd149 tag **v3.6.2** + selective patches from **v3.6.3** (root-host DNS skip, applesauce ^6.2) |
+| **Our base revision** | hzrd149 tag **v3.6.2** + selective patches from **v3.6.3** (root-host DNS skip, applesauce ^6.2), **v3.6.4** (expiration timer off), **v3.6.5** (path MIME over Blossom’s header) |
 | **License** | [MIT](LICENSE) — copyright **hzrd149** in `LICENSE`; our changes under the same license |
 
 For core gateway behavior (caching, hostname rules, Blossom proxy, Docker layout), hzrd149’s README is still the best reference for the shared foundation. **This README** covers how **we** run and extend it for gittr Pages.
